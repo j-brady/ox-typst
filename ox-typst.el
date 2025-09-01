@@ -1193,6 +1193,7 @@ Return PDF file name or raise an error if it couldn't be produced."
          (log-buf (get-buffer-create log-buf-name))
          (process (org-typst--generate-command typst-file))
          outfile)
+    (message process)
     (with-current-buffer log-buf
       (erase-buffer))
     (setq outfile (org-compile-file (expand-file-name typst-file)
@@ -1205,12 +1206,17 @@ Return PDF file name or raise an error if it couldn't be produced."
 
 ;; Citation Exporter
 (defun org-typst-export-bibliography (_keys files style properties _backend com)
+  ;; allow export from non-root bibliography
   (let ((dir (file-name-parent-directory (plist-get com :input-file)))
         (title (plist-get properties :title)))
     (format "#bibliography(%s%s(%s))"
             (and style (format "style: \"%s\", " style))
             (if title (format "title: %s, " (org-typst--as-string title)) "")
-            (mapconcat (lambda (f) (org-typst--as-string (file-relative-name f dir)))
+        ;;    (mapconcat (lambda (f)
+	;;		 (org-typst--as-typst-path
+	;;		  (org-typst--as-string
+	;;		   (file-relative-name f current-dir))))
+            (mapconcat (lambda (f) (org-typst--as-typst-path (file-relative-name f dir)))
                        files
                        ", "))))
 
